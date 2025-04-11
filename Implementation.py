@@ -917,10 +917,10 @@ def main():
     print("=" * 50)
     
     # Database connection details
-    DB_HOST = "34.130.187.182"
-    DB_NAME = "volleystat_lite"
-    DB_USER = "volleystat-db"
-    DB_PASSWORD = "volleystat4sa3"
+    DB_HOST = "localhost"
+    DB_NAME = "postgres"
+    DB_USER = "postgres"
+    DB_PASSWORD = "9055678820Iw"
     DB_PORT = "5432"
     
     # Google Sheets API details

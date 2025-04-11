@@ -16,7 +16,7 @@ def populate_sample_data():
     
     # Database connection details
     DB_HOST = "localhost"
-    DB_NAME = "volleystat_lite"
+    DB_NAME = "postgres"
     DB_USER = "postgres"
     DB_PASSWORD = "9055678820Iw"
     DB_PORT = "5432"
