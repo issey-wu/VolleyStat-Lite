@@ -919,7 +919,7 @@ def main():
     # Database connection details
     DB_HOST = "localhost"
     DB_NAME = "postgres"
-    DB_USER = "postgres"
+    DB_USER = "***REMOVED***"
     DB_PASSWORD = "9055678820Iw"
     DB_PORT = "5432"
     
