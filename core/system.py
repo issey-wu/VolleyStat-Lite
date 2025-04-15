@@ -4,6 +4,7 @@ This module contains the main functionality of the VolleyStat system.
 """
 
 import statistics
+import datetime
 from models.observer import Subject
 from utils.db_initializer import initialize_database
 
@@ -537,4 +538,116 @@ class VolleyStatSystem(Subject):
             return True
         else:
             print(f"Failed to export data to Google Sheets: {spreadsheet_name}")
+            return False
+
+    def export_comprehensive_report(self, spreadsheet_id):
+        """Export a comprehensive report of all data to Google Sheets."""
+        if not self.sheets_adapter:
+            print("Google Sheets adapter not available.")
+            return False
+        
+        try:
+            # 1. Export Teams Data
+            teams = self.db_adapter.read_data("SELECT * FROM teams ORDER BY id;")
+            if teams:
+                teams_data = [["Team ID", "Team Name"]]
+                for team in teams:
+                    teams_data.append([team[0], team[1]])
+                
+                self.sheets_adapter.write_data(spreadsheet_id, "Teams!A1", teams_data)
+                print("Teams data exported successfully")
+            
+            # 2. Export Players Data
+            players = self.db_adapter.read_data("""
+                SELECT p.id, p.name, p.position, t.name as team_name
+                FROM players p
+                JOIN teams t ON p.team_id = t.id
+                ORDER BY p.id;
+            """)
+            if players:
+                players_data = [["Player ID", "Name", "Position", "Team"]]
+                for player in players:
+                    players_data.append([player[0], player[1], player[2], player[3]])
+                
+                self.sheets_adapter.write_data(spreadsheet_id, "Players!A1", players_data)
+                print("Players data exported successfully")
+            
+            # 3. Export Matches Data
+            matches = self.db_adapter.read_data("""
+                SELECT m.id, t.name, m.opponent, m.match_date, m.sets_won, m.sets_lost
+                FROM matches m
+                JOIN teams t ON m.team_id = t.id
+                ORDER BY m.match_date DESC;
+            """)
+            if matches:
+                matches_data = [["Match ID", "Team", "Opponent", "Date", "Sets Won", "Sets Lost", "Result"]]
+                for match in matches:
+                    result = "Won" if match[4] > match[5] else "Lost"
+                    matches_data.append([match[0], match[1], match[2], match[3], match[4], match[5], result])
+                
+                self.sheets_adapter.write_data(spreadsheet_id, "Matches!A1", matches_data)
+                print("Matches data exported successfully")
+            
+            # 4. Export Player Stats Data
+            stats = self.db_adapter.read_data("""
+                SELECT ps.id, p.name as player_name, t.name as team_name, 
+                       m.opponent, m.match_date, ps.attacks, ps.kills, ps.errors, 
+                       ps.blocks, ps.digs, ps.aces
+                FROM player_stats ps
+                JOIN players p ON ps.player_id = p.id
+                JOIN matches m ON ps.match_id = m.id
+                JOIN teams t ON p.team_id = t.id
+                ORDER BY m.match_date DESC;
+            """)
+            if stats:
+                stats_data = [["Stat ID", "Player", "Team", "Opponent", "Match Date", 
+                               "Attacks", "Kills", "Errors", "Blocks", "Digs", "Aces"]]
+                for stat in stats:
+                    stats_data.append([
+                        stat[0], stat[1], stat[2], stat[3], stat[4], 
+                        stat[5], stat[6], stat[7], stat[8], stat[9], stat[10]
+                    ])
+                
+                self.sheets_adapter.write_data(spreadsheet_id, "Player Stats!A1", stats_data)
+                print("Player stats data exported successfully")
+            
+            # 5. Export Training Sessions Data
+            sessions = self.db_adapter.read_data("""
+                SELECT ts.id, t.name, ts.session_type, ts.session_date, ts.duration
+                FROM training_sessions ts
+                JOIN teams t ON ts.team_id = t.id
+                ORDER BY ts.session_date DESC;
+            """)
+            if sessions:
+                sessions_data = [["Session ID", "Team", "Type", "Date", "Duration (min)"]]
+                for session in sessions:
+                    sessions_data.append([
+                        session[0], session[1], session[2], session[3], session[4]
+                    ])
+                
+                self.sheets_adapter.write_data(spreadsheet_id, "Training Sessions!A1", sessions_data)
+                print("Training sessions data exported successfully")
+            
+            # 6. Create Summary Dashboard
+            summary_data = [
+                ["VOLLEYSTAT LITE - COMPREHENSIVE REPORT"],
+                [f"Generated on: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"],
+                [],
+                ["Category", "Count"],
+                ["Teams", len(teams) if teams else 0],
+                ["Players", len(players) if players else 0],
+                ["Matches", len(matches) if matches else 0],
+                ["Stats Records", len(stats) if stats else 0],
+                ["Training Sessions", len(sessions) if sessions else 0],
+            ]
+            
+            self.sheets_adapter.write_data(spreadsheet_id, "Summary!A1", summary_data)
+            print("Summary dashboard created successfully")
+            
+            print("\nComprehensive report exported successfully to Google Sheets!")
+            print(f"Spreadsheet ID: {spreadsheet_id}")
+            return True
+            
+        except Exception as e:
+            print(f"Error exporting comprehensive report: {e}")
             return False
