@@ -339,9 +339,10 @@ def main():
             print("2. Team Report")
             print("3. Training Recommendation")
             print("4. Export to Google Sheets")
-            print("5. Back to Main Menu")
+            print("5. Export Comprehensive Report")
+            print("6. Back to Main Menu")
             
-            report_choice = input("\nEnter your choice (1-5): ")
+            report_choice = input("\nEnter your choice (1-6): ")
             
             if report_choice == "1":
                 players = db_adapter.read_data("""
@@ -514,7 +515,24 @@ def main():
                     
                     if result:
                         print("Team data exported successfully.")
+
+            elif report_choice == "5":
+                if not sheets_adapter:
+                    print("Google Sheets adapter not available.")
+                    continue
+                
+                print("\nEXPORT COMPREHENSIVE REPORT")
+                # Implement comprehensive report export logic here
+                # For now, just a placeholder message
+                print("This will export all data to Google Sheets with multiple sheets/tabs")
+                confirm = input("Do you want to proceed? (y/n): ")
+    
+                if confirm.lower() == 'y':
+                    result = system.export_comprehensive_report(SAMPLE_SPREADSHEET_ID)
         
+                    if result:
+                        print("Comprehensive report exported successfully!")
+
         elif choice == "6":
             # Exit
             print("\nThank you for using VolleyStat Lite!")
