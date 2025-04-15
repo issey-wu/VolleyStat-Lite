@@ -50,8 +50,20 @@ class GoogleSheetsAdapter(ThirdPartyAdapter):
                 return False
                 
         try:
+            # Convert any date objects to strings before sending to API
+            processed_data = []
+            for row in data:
+                processed_row = []
+                for item in row:
+                    # Check if the item is a date or datetime object
+                    if hasattr(item, 'strftime'):
+                        processed_row.append(item.strftime('%Y-%m-%d'))
+                    else:
+                        processed_row.append(item)
+                processed_data.append(processed_row)
+            
             body = {
-                'values': data
+                'values': processed_data
             }
             result = self.service.spreadsheets().values().update(
                 spreadsheetId=spreadsheet_id,
