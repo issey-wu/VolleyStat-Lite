@@ -40,10 +40,19 @@ class VolleyStatSystem(Subject):
     
     def record_match(self, team_id, opponent, match_date, sets_won, sets_lost):
         """Record a match in the database."""
+        # First verify the team exists
+        team_check_query = "SELECT * FROM teams WHERE id = %s;"
+        team_exists = self.db_adapter.read_data(team_check_query, (team_id,))
+    
+        if not team_exists:
+            print(f"Error: Team with ID {team_id} does not exist. Match not recorded.")
+            return None
+    
         query = """
             INSERT INTO matches (team_id, opponent, match_date, sets_won, sets_lost)
             VALUES (%s, %s, %s, %s, %s) RETURNING id;
         """
+    
         result = self.db_adapter.read_data(
             query, (team_id, opponent, match_date, sets_won, sets_lost)
         )
@@ -51,6 +60,15 @@ class VolleyStatSystem(Subject):
         if result:
             match_id = result[0][0]
             self.notify(f"New match recorded: against {opponent} on {match_date}")
+        
+            # Verify the match was saved
+            verify_query = "SELECT * FROM matches WHERE id = %s;"
+            verify_result = self.db_adapter.read_data(verify_query, (match_id,))
+            if verify_result:
+                print(f"Match verification successful. ID: {match_id}, Team ID: {verify_result[0][1]}")
+            else:
+                print("Warning: Match was created but couldn't be verified!")
+            
             return match_id
         return None
     
@@ -539,7 +557,7 @@ class VolleyStatSystem(Subject):
         else:
             print(f"Failed to export data to Google Sheets: {spreadsheet_name}")
             return False
-
+    
     def export_comprehensive_report(self, spreadsheet_id):
         """Export a comprehensive report of all data to Google Sheets."""
         if not self.sheets_adapter:
@@ -547,6 +565,44 @@ class VolleyStatSystem(Subject):
             return False
         
         try:
+            # First, make sure the sheets exist
+            # We need to use the spreadsheets.batchUpdate API for this
+            if not self.sheets_adapter.service:
+                if not self.sheets_adapter.connect():
+                    return False
+            
+            # Define the sheets we need
+            sheet_names = ["Summary", "Teams", "Players", "Matches", "Player Stats", "Training Sessions"]
+            
+            # Check what sheets already exist
+            spreadsheet_info = self.sheets_adapter.service.spreadsheets().get(
+                spreadsheetId=spreadsheet_id
+            ).execute()
+            
+            existing_sheets = [sheet['properties']['title'] for sheet in spreadsheet_info.get('sheets', [])]
+            
+            # Prepare requests to add missing sheets
+            requests = []
+            for sheet_name in sheet_names:
+                if sheet_name not in existing_sheets:
+                    requests.append({
+                        'addSheet': {
+                            'properties': {
+                                'title': sheet_name
+                            }
+                        }
+                    })
+            
+            # Execute the batch update if there are any requests
+            if requests:
+                self.sheets_adapter.service.spreadsheets().batchUpdate(
+                    spreadsheetId=spreadsheet_id,
+                    body={'requests': requests}
+                ).execute()
+                print(f"Created {len(requests)} new sheets in the spreadsheet")
+            
+            # Now we can proceed with populating the data
+            
             # 1. Export Teams Data
             teams = self.db_adapter.read_data("SELECT * FROM teams ORDER BY id;")
             if teams:

@@ -23,7 +23,7 @@ def main():
     DB_HOST = "localhost"
     DB_NAME = "postgres"
     DB_USER = "***REMOVED***"
-    DB_PASSWORD = "9055678820Iw"
+    ***REMOVED***
     DB_PORT = "5432"
     
     # Google Sheets API details
