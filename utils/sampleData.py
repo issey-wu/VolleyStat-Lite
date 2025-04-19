@@ -13,7 +13,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)  # This gets the "VolleyStat Lite" directory
 sys.path.append(parent_dir)
 
-# Now you can import from other modules
+# Import from other modules
 from adapters.postgres_adapter import PostgresAdapter
 
 def populate_sample_data():
