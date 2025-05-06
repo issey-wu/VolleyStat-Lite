@@ -22,13 +22,13 @@ def main():
     # Database connection details
     DB_HOST = "localhost"
     DB_NAME = "postgres"
-    DB_USER = "documentdojo"
-    DB_PASSWORD = "Password1234"
+    DB_USER = "<your-username"
+    DB_PASSWORD = "<your-password"
     DB_PORT = "5432"
     
     # Google Sheets API details
-    GOOGLE_CREDS_FILE = "constant-falcon-450708-m6-22f620164501.json"
-    SAMPLE_SPREADSHEET_ID = "1gTRLQbf8LYJ5IMWD0w0roPE9PWzjIbl7wXBNc05CWCU"
+    GOOGLE_CREDS_FILE = "credentials.json"
+    SAMPLE_SPREADSHEET_ID = "<your-spreadsheet-id"
     
     # Initialize database adapter
     db_adapter = PostgresAdapter(
