@@ -23,8 +23,8 @@ def populate_sample_data():
     # Database connection details
     DB_HOST = "localhost"
     DB_NAME = "postgres"
-    DB_USER = "documentdojo"
-    DB_PASSWORD = "Password1234"
+    DB_USER = "<your-username>"
+    DB_PASSWORD = "<your-password>"
     DB_PORT = "5432"
     
     # Create a database adapter
